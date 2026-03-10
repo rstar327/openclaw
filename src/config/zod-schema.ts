@@ -696,6 +696,8 @@ export const OpenClawSchema = z
           .strict()
           .optional(),
         channelHealthCheckMinutes: z.number().int().min(0).optional(),
+        channelStaleEventThresholdMinutes: z.number().int().min(1).optional(),
+        channelMaxRestartsPerHour: z.number().int().min(1).optional(),
         tailscale: z
           .object({
             mode: z.union([z.literal("off"), z.literal("serve"), z.literal("funnel")]).optional(),
