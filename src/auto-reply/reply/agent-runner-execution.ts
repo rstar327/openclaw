@@ -5,10 +5,12 @@ import { runCliAgent } from "../../agents/cli-runner.js";
 import { getCliSessionId } from "../../agents/cli-session.js";
 import { runWithModelFallback } from "../../agents/model-fallback.js";
 import { isCliProvider } from "../../agents/model-selection.js";
+import { isFailoverError } from "../../agents/failover-error.js";
 import {
   isCompactionFailureError,
   isContextOverflowError,
   isLikelyContextOverflowError,
+  isOverloadedErrorMessage,
   isTransientHttpError,
   sanitizeUserFacingText,
 } from "../../agents/pi-embedded-helpers.js";
@@ -605,6 +607,22 @@ export async function runAgentTurnWithFallback(params: {
         continue;
       }
 
+      // Surface overloaded errors (e.g. Anthropic 529) with a user-friendly message
+      // instead of exposing raw error details. Check both the FailoverError reason
+      // and the message text to catch all overloaded error shapes (#42432).
+      const isOverloaded =
+        (isFailoverError(err) && err.reason === "overloaded") ||
+        isOverloadedErrorMessage(message);
+      if (isOverloaded) {
+        defaultRuntime.error(`Provider overloaded error: ${message}`);
+        return {
+          kind: "final",
+          payload: {
+            text: "The AI service is temporarily overloaded. Please try again in a moment.",
+          },
+        };
+      }
+
       defaultRuntime.error(`Embedded agent failed before reply: ${message}`);
       const safeMessage = isTransientHttp
         ? sanitizeUserFacingText(message, { errorContext: true })
@@ -637,6 +655,21 @@ export async function runAgentTurnWithFallback(params: {
       kind: "final",
       payload: {
         text: "⚠️ Context overflow — this conversation is too large for the model. Use /new to start a fresh session.",
+      },
+    };
+  }
+
+  // Surface overloaded errors returned as embedded error payloads without reply text.
+  // Without this, the overloaded error is silently swallowed and the user gets no response (#42432).
+  if (
+    finalEmbeddedError &&
+    isOverloadedErrorMessage(finalEmbeddedError.message) &&
+    !hasPayloadText
+  ) {
+    return {
+      kind: "final",
+      payload: {
+        text: "The AI service is temporarily overloaded. Please try again in a moment.",
       },
     };
   }
