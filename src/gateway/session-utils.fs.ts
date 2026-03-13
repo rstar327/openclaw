@@ -577,15 +577,15 @@ function truncatePreviewText(text: string, maxChars: number): string {
  */
 function stripSecurityNoticeForPreview(text: string): string {
   const hadMarkers = /<<<\s*(?:END_)?EXTERNAL_UNTRUSTED_CONTENT/.test(text);
-  let result = text
-    .replace(/<<<\s*(?:END_)?EXTERNAL_UNTRUSTED_CONTENT(?:\s+id="[^"]*")?\s*>>>/g, "")
-    .replace(
-      /SECURITY NOTICE: The following content is from an EXTERNAL, UNTRUSTED source[^\n]*(?:\n\s*- [^\n]*)*/g,
-      "",
-    );
-  // Only strip wrapper metadata when external content markers were present
+  let result = text.replace(/<<<\s*(?:END_)?EXTERNAL_UNTRUSTED_CONTENT(?:\s+id="[^"]*")?\s*>>>/g, "");
+  // Only strip security notice and wrapper metadata when external content markers were present
   if (hadMarkers) {
-    result = result.replace(/^\s*Source:\s+[^\n]*(?:\n(?:From|Subject):\s+[^\n]*)*\n---\n?/g, "");
+    result = result
+      .replace(
+        /SECURITY NOTICE: The following content is from an EXTERNAL, UNTRUSTED source[^\n]*(?:\n\s*- [^\n]*)*/g,
+        "",
+      )
+      .replace(/^\s*Source:\s+[^\n]*(?:\n(?:From|Subject):\s+[^\n]*)*\n---\n?/g, "");
   }
   return result.replace(/\n{3,}/g, "\n\n").trim();
 }
