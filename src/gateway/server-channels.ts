@@ -132,10 +132,6 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
 
   const isHealthMonitorEnabled = (channelId: ChannelId, accountId: string): boolean => {
     const cfg = loadConfig();
-    if (cfg.gateway?.channelHealthMonitorEnabled === false) {
-      return false;
-    }
-
     const channelConfig = cfg.channels?.[channelId] as RawChannelConfig | undefined;
     const accountOverride = channelConfig?.accounts?.[accountId]?.healthMonitor?.enabled;
     if (typeof accountOverride === "boolean") {

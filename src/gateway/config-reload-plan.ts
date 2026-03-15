@@ -37,11 +37,6 @@ const BASE_RELOAD_RULES: ReloadRule[] = [
   { prefix: "gateway.remote", kind: "none" },
   { prefix: "gateway.reload", kind: "none" },
   {
-    prefix: "gateway.channelHealthMonitorEnabled",
-    kind: "hot",
-    actions: ["restart-health-monitor"],
-  },
-  {
     prefix: "gateway.channelHealthCheckMinutes",
     kind: "hot",
     actions: ["restart-health-monitor"],
