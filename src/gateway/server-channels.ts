@@ -128,9 +128,15 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
           healthMonitor?: {
             enabled?: boolean;
           };
+          config?: {
+            healthMonitor?: {
+              enabled?: boolean;
+            };
+          };
         }
       | undefined;
     const accountOverride = resolvedAccount?.healthMonitor?.enabled;
+    const wrappedAccountOverride = resolvedAccount?.config?.healthMonitor?.enabled;
     const channelOverride = (
       cfg.channels?.[channelId] as
         | {
@@ -143,6 +149,10 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
 
     if (typeof accountOverride === "boolean") {
       return accountOverride;
+    }
+
+    if (typeof wrappedAccountOverride === "boolean") {
+      return wrappedAccountOverride;
     }
 
     if (typeof channelOverride === "boolean") {
