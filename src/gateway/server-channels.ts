@@ -31,16 +31,6 @@ type ChannelRuntimeStore = {
   runtimes: Map<string, ChannelAccountSnapshot>;
 };
 
-type RawHealthMonitorEntry = {
-  healthMonitor?: {
-    enabled?: boolean;
-  };
-};
-
-type RawChannelConfig = RawHealthMonitorEntry & {
-  accounts?: Record<string, RawHealthMonitorEntry | undefined>;
-};
-
 function createRuntimeStore(): ChannelRuntimeStore {
   return {
     aborts: new Map(),
@@ -132,15 +122,18 @@ export function createChannelManager(opts: ChannelManagerOptions): ChannelManage
 
   const isHealthMonitorEnabled = (channelId: ChannelId, accountId: string): boolean => {
     const cfg = loadConfig();
-    const channelConfig = cfg.channels?.[channelId] as RawChannelConfig | undefined;
-    const accountOverride = channelConfig?.accounts?.[accountId]?.healthMonitor?.enabled;
+    const plugin = getChannelPlugin(channelId);
+    const resolvedAccount = plugin?.config.resolveAccount(cfg, accountId) as
+      | {
+          healthMonitor?: {
+            enabled?: boolean;
+          };
+        }
+      | undefined;
+    const accountOverride = resolvedAccount?.healthMonitor?.enabled;
+
     if (typeof accountOverride === "boolean") {
       return accountOverride;
-    }
-
-    const channelOverride = channelConfig?.healthMonitor?.enabled;
-    if (typeof channelOverride === "boolean") {
-      return channelOverride;
     }
 
     return true;
