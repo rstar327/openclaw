@@ -243,6 +243,18 @@ describe("gateway.channelHealthCheckMinutes", () => {
     });
     expect(greater.ok).toBe(true);
   });
+
+  it("rejects stale thresholds shorter than the default health check interval", () => {
+    const res = validateConfigObject({
+      gateway: {
+        channelStaleEventThresholdMinutes: 4,
+      },
+    });
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.issues[0]?.path).toBe("gateway.channelStaleEventThresholdMinutes");
+    }
+  });
 });
 
 describe("cron webhook schema", () => {

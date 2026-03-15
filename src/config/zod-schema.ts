@@ -836,11 +836,11 @@ export const OpenClawSchema = z
       })
       .strict()
       .superRefine((gateway, ctx) => {
+        const effectiveHealthCheckMinutes = gateway.channelHealthCheckMinutes ?? 5;
         if (
           gateway.channelStaleEventThresholdMinutes != null &&
-          gateway.channelHealthCheckMinutes != null &&
-          gateway.channelHealthCheckMinutes !== 0 &&
-          gateway.channelStaleEventThresholdMinutes < gateway.channelHealthCheckMinutes
+          effectiveHealthCheckMinutes !== 0 &&
+          gateway.channelStaleEventThresholdMinutes < effectiveHealthCheckMinutes
         ) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
